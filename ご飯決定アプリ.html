@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>何食べる券売機</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap');
+
+  :root{
+    --machine:#2a2521; --machine-2:#37302a; --machine-3:#433a31;
+    --edge:#171310; --red:#e6402c; --red-dark:#a9271a;
+    --amber:#f6a92b; --amber-ink:#3a2a05;
+    --jade:#3f9e7c; --jade-dark:#2c7359;
+    --ticket:#f7f0df; --ticket-2:#efe4cb; --ticket-line:#ddd0b2;
+    --ink:#2a2521; --cream:#efe6d5; --muted:#a99a86;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:'Zen Kaku Gothic New',sans-serif;
+    background:
+      radial-gradient(120% 80% at 50% -10%, #2a2136 0%, transparent 55%),
+      linear-gradient(180deg,#171310 0%, #120f0d 100%);
+    color:var(--cream); min-height:100dvh;
+    display:flex; justify-content:center; align-items:flex-start;
+    padding:22px 14px 60px; -webkit-font-smoothing:antialiased;
+  }
+  .machine{
+    width:100%; max-width:430px;
+    background:linear-gradient(180deg,var(--machine-2),var(--machine));
+    border:1px solid #4a4038; border-radius:26px; padding:16px 16px 20px;
+    position:relative;
+    box-shadow:0 1px 0 rgba(255,255,255,.05) inset,0 40px 80px -30px rgba(0,0,0,.9),0 2px 0 var(--edge);
+  }
+  .machine::before,.machine::after,.screw{
+    content:""; position:absolute; width:9px;height:9px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#6a5e50,#2c2621);
+    box-shadow:0 1px 1px rgba(0,0,0,.6);
+  }
+  .machine::before{top:12px;left:12px;} .machine::after{top:12px;right:12px;}
+  .screw.bl{bottom:12px;left:12px;top:auto;} .screw.br{bottom:12px;right:12px;top:auto;}
+
+  .plate{text-align:center;padding:6px 0 14px;}
+  .plate .lamp{display:inline-flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.28em;color:var(--amber);margin-bottom:8px;}
+  .plate .lamp .dot{width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 8px 1px var(--amber);animation:blink 2.4s infinite;}
+  @keyframes blink{0%,92%,100%{opacity:1}95%{opacity:.35}}
+  .plate h1{font-family:'Dela Gothic One',sans-serif;font-size:30px;line-height:1.05;color:var(--cream);}
+  .plate h1 b{color:var(--red);}
+  .plate p{margin-top:7px;font-size:12.5px;color:var(--muted);letter-spacing:.04em;}
+
+  .panel{background:linear-gradient(180deg,#211d19,#191512);border:1px solid #0f0c0a;border-radius:16px;padding:14px 13px 16px;box-shadow:0 2px 0 rgba(255,255,255,.03) inset;}
+  .group{margin-bottom:14px;} .group:last-child{margin-bottom:0;}
+  .group > .label{display:flex;align-items:baseline;gap:8px;font-size:11px;color:var(--muted);letter-spacing:.14em;margin:0 2px 8px;}
+  .group > .label .no{font-family:'Dela Gothic One',sans-serif;color:var(--amber);font-size:11px;}
+  .group > .label .req{color:var(--red);font-size:10px;letter-spacing:.1em;font-family:'Zen Kaku Gothic New';font-weight:700;}
+
+  .chips{display:flex;flex-wrap:wrap;gap:7px;}
+  .chip{font-family:inherit;font-size:13.5px;font-weight:700;color:var(--cream);background:var(--machine-3);border:1px solid #56493d;border-radius:11px;padding:9px 12px;cursor:pointer;transition:transform .07s ease,background .15s,border-color .15s,color .15s,box-shadow .15s;-webkit-tap-highlight-color:transparent;}
+  .chip:active{transform:translateY(1px) scale(.98);}
+  .chip[aria-pressed="true"]{background:linear-gradient(180deg,#ffc35a,var(--amber));color:var(--amber-ink);border-color:#ffd67d;box-shadow:0 0 0 1px #ffd67d,0 0 14px -1px var(--amber);}
+  .chip.any{opacity:.9;}
+  .chip:focus-visible{outline:3px solid #ffd67d;outline-offset:2px;}
+  .chip .em{margin-right:5px;}
+
+  /* area input */
+  .loc{margin-top:14px;}
+  .loc .areawrap{position:relative;display:flex;align-items:center;}
+  .loc .areawrap .pin{position:absolute;left:12px;font-size:14px;pointer-events:none;opacity:.85;}
+  .loc input{width:100%;font-family:inherit;font-size:14px;font-weight:500;color:var(--cream);background:var(--machine-3);border:1px solid #56493d;border-radius:11px;padding:12px 12px 12px 34px;-webkit-tap-highlight-color:transparent;}
+  .loc input::placeholder{color:#8a7c6a;font-weight:400;}
+  .loc input:focus{outline:none;border-color:var(--jade);box-shadow:0 0 0 1px var(--jade);}
+  .loc .note{margin-top:6px;font-size:11px;color:var(--muted);text-align:center;}
+
+  .lever{margin-top:14px;}
+  .go{width:100%;font-family:'Dela Gothic One',sans-serif;font-size:19px;letter-spacing:.06em;color:#fff;background:linear-gradient(180deg,#f0533c,var(--red));border:none;border-radius:15px;padding:17px 14px;cursor:pointer;position:relative;box-shadow:0 5px 0 var(--red-dark),0 12px 22px -8px rgba(230,64,44,.7);transition:transform .08s ease,box-shadow .08s ease;-webkit-tap-highlight-color:transparent;}
+  .go:active{transform:translateY(4px);box-shadow:0 1px 0 var(--red-dark),0 6px 14px -8px rgba(230,64,44,.7);}
+  .go:focus-visible{outline:3px solid #ffd67d;outline-offset:3px;}
+  .go small{display:block;font-family:'Zen Kaku Gothic New';font-weight:700;font-size:11px;letter-spacing:.2em;opacity:.85;margin-bottom:3px;}
+
+  .slotwrap{margin-top:18px;}
+  .slot{height:12px;background:var(--edge);border-radius:6px;box-shadow:0 2px 5px rgba(0,0,0,.7) inset;position:relative;margin:0 6px;}
+  .slot::after{content:"取 出 口";position:absolute;left:50%;top:16px;transform:translateX(-50%);font-size:9px;letter-spacing:.4em;color:var(--muted);white-space:nowrap;}
+
+  .tray{margin-top:26px;min-height:74px;display:flex;justify-content:center;}
+  .hint{align-self:center;text-align:center;color:var(--muted);font-size:13px;line-height:1.7;padding:8px 6px;}
+  .hint b{color:var(--cream);}
+  .warn{align-self:center;text-align:center;color:#f0a06a;font-size:13px;line-height:1.7;padding:10px;}
+
+  .ticket{width:100%;background:linear-gradient(180deg,var(--ticket),var(--ticket-2));color:var(--ink);border-radius:5px;padding:18px 18px 16px;position:relative;box-shadow:0 18px 30px -14px rgba(0,0,0,.7);
+    -webkit-mask:radial-gradient(circle 6px at 6px -1px,transparent 98%,#000) 0 0/16px 100% repeat-x;
+    mask:radial-gradient(circle 6px at 6px -1px,transparent 98%,#000) 0 0/16px 100% repeat-x;}
+  .ticket .head{display:flex;justify-content:space-between;align-items:center;border-bottom:2px dashed var(--ticket-line);padding-bottom:8px;margin-bottom:12px;}
+  .ticket .head .k{font-size:10px;letter-spacing:.3em;color:#9c8f77;}
+  .ticket .head .n{font-family:'Dela Gothic One',sans-serif;font-size:12px;color:#b8562f;}
+  .ticket .body{display:flex;align-items:center;gap:14px;}
+  .ticket .emoji{font-size:50px;line-height:1;filter:drop-shadow(0 3px 4px rgba(0,0,0,.18));}
+  .ticket .name{font-family:'Dela Gothic One',sans-serif;font-size:26px;line-height:1.12;color:var(--ink);}
+  .ticket .blurb{margin-top:5px;font-size:12.5px;color:#6a5f4d;font-weight:500;}
+  .ticket .cond{margin-top:13px;display:flex;flex-wrap:wrap;gap:6px;}
+  .ticket .cond span{font-size:11px;font-weight:700;background:#efe1c2;color:#7c6a44;border-radius:20px;padding:4px 9px;}
+
+  .mapbtn{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:14px;width:100%;font-family:inherit;font-weight:700;font-size:14px;text-decoration:none;color:#fff;background:linear-gradient(180deg,#51b491,var(--jade));border-radius:11px;padding:13px;box-shadow:0 4px 0 var(--jade-dark);transition:transform .07s;-webkit-tap-highlight-color:transparent;}
+  .mapbtn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--jade-dark);}
+  .mapbtn:focus-visible{outline:3px solid #9fe0c6;outline-offset:2px;}
+
+  .ticket .alt{margin-top:14px;border-top:2px dashed var(--ticket-line);padding-top:10px;}
+  .ticket .alt .t{font-size:10px;letter-spacing:.25em;color:#9c8f77;margin-bottom:8px;}
+  .ticket .alt ul{list-style:none;display:flex;flex-direction:column;gap:9px;}
+  .ticket .alt li{font-size:13px;color:#5b4f3c;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+  .ticket .alt li .info{min-width:0;}
+  .ticket .alt li b{font-weight:700;}
+  .ticket .alt li em{display:block;font-style:normal;color:#9c8f77;font-size:11px;margin-top:1px;}
+  .ticket .alt li .mini{flex:none;text-decoration:none;font-size:12px;font-weight:700;color:var(--jade-dark);background:#e4efe6;border:1px solid #bcdccb;border-radius:8px;padding:6px 9px;white-space:nowrap;}
+  .ticket .alt li .mini:active{transform:translateY(1px);}
+
+  .ticket .stamp{position:absolute;right:14px;top:64px;font-family:'Dela Gothic One',sans-serif;font-size:12px;color:#c9412a;border:2px solid #c9412a;border-radius:6px;padding:3px 7px;transform:rotate(-11deg);opacity:.85;}
+  .ticket .btns{margin-top:12px;display:flex;gap:8px;}
+  .ticket .btns button{flex:1;font-family:inherit;font-weight:700;font-size:13px;padding:11px 8px;border-radius:10px;cursor:pointer;border:none;-webkit-tap-highlight-color:transparent;transition:transform .07s;}
+  .ticket .btns button:active{transform:translateY(1px);}
+  .ticket .btns .again{background:var(--ink);color:var(--ticket);}
+  .ticket .btns .edit{background:#e6d7b6;color:#6a5b3d;}
+  .ticket .btns button:focus-visible{outline:3px solid var(--red);outline-offset:2px;}
+
+  @keyframes dispense{0%{transform:translateY(-46px) scaleY(.6);opacity:0;}55%{transform:translateY(6px) scaleY(1.02);opacity:1;}100%{transform:translateY(0) scaleY(1);opacity:1;}}
+  .ticket.show{animation:dispense .5s cubic-bezier(.2,.9,.25,1) both;}
+  .foot{text-align:center;margin-top:16px;font-size:10.5px;color:#5e534a;letter-spacing:.1em;}
+  @media (prefers-reduced-motion: reduce){.ticket.show{animation:none;}.plate .lamp .dot{animation:none;}}
+</style>
+</head>
+<body>
+  <main class="machine">
+    <span class="screw bl"></span><span class="screw br"></span>
+
+    <div class="plate">
+      <div class="lamp"><span class="dot"></span>TOKYO CHAINS</div>
+      <h1>何食べる<b>券売機</b></h1>
+      <p>ジャンルと空き具合で、東京に多いチェーン店を提案。</p>
+    </div>
+
+    <section class="panel" id="panel">
+      <div class="group" data-group="genre">
+        <div class="label"><span class="no">01</span> ジャンル <span class="req">必須</span></div>
+        <div class="chips"></div>
+      </div>
+      <div class="group" data-group="hunger">
+        <div class="label"><span class="no">02</span> おなかの空き具合</div>
+        <div class="chips"></div>
+      </div>
+      <div class="loc">
+        <div class="areawrap">
+          <span class="pin">📍</span>
+          <input id="area" type="text" inputmode="text" placeholder="エリア・駅名（任意） 例：渋谷、新宿駅">
+        </div>
+        <div class="note">入力すると地図がその地域で開きます。空欄でもOK。</div>
+      </div>
+    </section>
+
+    <div class="lever">
+      <button class="go" id="go"><small>PUSH</small>決定 — お店を出す</button>
+    </div>
+
+    <div class="slotwrap"><div class="slot"></div></div>
+
+    <div class="tray" id="tray">
+      <div class="hint">ジャンルを選んで <b>決定</b> を押すと、<br>候補のチェーン店がここに出てきます。<br>店名の「地図」から近くの店舗を探せます。</div>
+    </div>
+
+    <div class="foot">MESHI-KEN Vending / 東京で見かけるチェーンから</div>
+  </main>
+
+<script>
+/* お腹の空き具合 */
+const HUNGER = [["karume","軽め"],["shikkari","しっかり"],["gattsuri","がっつり"]];
+
+/* ジャンル → 東京に店舗が多いチェーン店 */
+const GENRES = {
+  washoku:{label:"和食・定食", em:"🍚", chains:[
+    {n:"大戸屋",       h:["shikkari"],            b:"定番の定食がずらり。"},
+    {n:"やよい軒",     h:["shikkari","gattsuri"], b:"ごはんおかわり自由。"},
+    {n:"松のや",       h:["shikkari","gattsuri"], b:"サクサクとんかつ定食。"},
+    {n:"かつや",       h:["shikkari","gattsuri"], b:"揚げたてカツをお手頃に。"},
+    {n:"ねぎし",       h:["shikkari"],            b:"牛タンととろろでほっと。"},
+    {n:"おぼんdeごはん",h:["karume","shikkari"],  b:"おひつごはんの定食屋。"},
+    {n:"夢庵",         h:["karume","shikkari"],   b:"和のファミレスで気楽に。"},
+    {n:"しゃぶ葉",     h:["gattsuri"],            b:"しゃぶしゃぶ食べ放題。"},
+  ]},
+  yoshoku:{label:"洋食・ファミレス", em:"🍴", chains:[
+    {n:"サイゼリヤ",     h:["karume","shikkari"], b:"安さと気軽さで無敵。"},
+    {n:"ガスト",         h:["karume","shikkari"], b:"何でも揃う王道ファミレス。"},
+    {n:"ジョナサン",     h:["shikkari"],          b:"落ち着いて食べたい時に。"},
+    {n:"デニーズ",       h:["shikkari"],          b:"ゆっくり過ごせる定番。"},
+    {n:"ココス",         h:["shikkari"],          b:"デザートも楽しいファミレス。"},
+    {n:"ロイヤルホスト", h:["shikkari"],          b:"ちょっと良いファミレス。"},
+    {n:"洋麺屋五右衛門", h:["shikkari"],          b:"和風パスタが名物。"},
+    {n:"カプリチョーザ", h:["shikkari"],          b:"たっぷり量のイタリアン。"},
+    {n:"びっくりドンキー",h:["gattsuri"],         b:"ハンバーグでがっつり。"},
+    {n:"ステーキガスト", h:["gattsuri"],          b:"肉とサラダバーで満腹。"},
+    {n:"いきなり!ステーキ",h:["gattsuri"],        b:"立ち食いで豪快にステーキ。"},
+  ]},
+  chuka:{label:"中華", em:"🥟", chains:[
+    {n:"餃子の王将",       h:["shikkari","gattsuri"], b:"餃子と炒飯で間違いなし。"},
+    {n:"日高屋",           h:["karume","shikkari"],   b:"駅前でサッと中華。"},
+    {n:"バーミヤン",       h:["karume","shikkari"],   b:"家族で行けるファミレス中華。"},
+    {n:"大阪王将",         h:["shikkari"],            b:"餃子と定食が充実。"},
+    {n:"東秀",             h:["karume","shikkari"],   b:"下町の定番中華食堂。"},
+    {n:"れんげ食堂トシュウ",h:["karume","shikkari"],  b:"安うま町中華。"},
+    {n:"陳麻家",           h:["shikkari"],            b:"麻婆と担々のセットが人気。"},
+  ]},
+  ramen:{label:"ラーメン", em:"🍜", chains:[
+    {n:"一蘭",           h:["shikkari"],            b:"集中して味わう豚骨。"},
+    {n:"一風堂",         h:["shikkari"],            b:"とんこつの名店チェーン。"},
+    {n:"幸楽苑",         h:["karume","shikkari"],   b:"気軽な中華そば。"},
+    {n:"らあめん花月嵐", h:["shikkari","gattsuri"], b:"にんにく効いた嵐げんこつ。"},
+    {n:"くるまやラーメン",h:["karume","shikkari"],  b:"気軽な味噌ラーメン。"},
+    {n:"天下一品",       h:["gattsuri"],            b:"こってりスープの中毒性。"},
+    {n:"町田商店",       h:["gattsuri"],            b:"家系でパンチのある一杯。"},
+    {n:"山岡家",         h:["gattsuri"],            b:"24時間の濃厚豚骨。"},
+    {n:"ラーメン二郎",   h:["gattsuri"],            b:"覚悟のいるボリューム。"},
+  ]},
+  sushi:{label:"寿司", em:"🍣", chains:[
+    {n:"スシロー",   h:["karume","shikkari","gattsuri"], b:"回転寿司の定番。"},
+    {n:"くら寿司",   h:["karume","shikkari"],   b:"びっくらポンも楽しい。"},
+    {n:"はま寿司",   h:["karume","shikkari"],   b:"種類豊富でお得。"},
+    {n:"かっぱ寿司", h:["karume","shikkari"],   b:"お手頃回転寿司。"},
+    {n:"魚べい",     h:["karume","shikkari"],   b:"レーンで届く回転寿司。"},
+    {n:"元気寿司",   h:["karume","shikkari"],   b:"レーン直送の回転寿司。"},
+    {n:"銚子丸",     h:["shikkari"],            b:"活きのいいネタが自慢。"},
+  ]},
+  yakiniku:{label:"焼肉", em:"🥩", chains:[
+    {n:"牛角",           h:["shikkari","gattsuri"], b:"みんなで囲む定番焼肉。"},
+    {n:"焼肉きんぐ",     h:["gattsuri"],            b:"食べ放題でとことん。"},
+    {n:"焼肉ライク",     h:["karume","shikkari"],   b:"ひとり焼肉ならここ。"},
+    {n:"安楽亭",         h:["shikkari"],            b:"家族で気軽に焼肉。"},
+    {n:"牛繁",           h:["shikkari"],            b:"下町の大衆焼肉。"},
+    {n:"七輪房",         h:["shikkari"],            b:"七輪でじっくり。"},
+    {n:"じゅうじゅうカルビ",h:["gattsuri"],         b:"焼肉食べ放題。"},
+  ]},
+  curry:{label:"カレー", em:"🍛", chains:[
+    {n:"CoCo壱番屋",     h:["shikkari","gattsuri"], b:"トッピング自在のカレー。"},
+    {n:"ゴーゴーカレー", h:["gattsuri"],            b:"金沢仕込みの濃厚カレー。"},
+    {n:"日乃屋カレー",   h:["shikkari"],            b:"甘辛あとひくご当地系。"},
+    {n:"マイカリー食堂", h:["shikkari","gattsuri"], b:"松屋系のカレー専門店。"},
+    {n:"100時間カレー",  h:["shikkari"],            b:"煮込んだ欧風カレー。"},
+    {n:"上等カレー",     h:["shikkari"],            b:"甘辛スパイスのカレー。"},
+  ]},
+  don:{label:"牛丼・丼もの", em:"🐮", chains:[
+    {n:"吉野家",       h:["karume","shikkari"],   b:"うまい・やすい・はやい。"},
+    {n:"松屋",         h:["karume","shikkari"],   b:"券売機でサッと牛めし。"},
+    {n:"すき家",       h:["karume","shikkari","gattsuri"], b:"トッピング豊富な牛丼。"},
+    {n:"なか卯",       h:["karume","shikkari"],   b:"親子丼とうどんが名物。"},
+    {n:"天丼てんや",   h:["shikkari"],            b:"サクサク天丼をお手頃に。"},
+    {n:"かつや",       h:["shikkari","gattsuri"], b:"カツ丼もサクサク。"},
+    {n:"丼丸",         h:["karume","shikkari"],   b:"ワンコイン前後の海鮮丼。"},
+    {n:"伝説のすた丼屋",h:["gattsuri"],           b:"にんにく効いたスタミナ丼。"},
+  ]},
+  men:{label:"そば・うどん", em:"🍲", chains:[
+    {n:"丸亀製麺",       h:["karume","shikkari"],   b:"打ちたてうどんが名物。"},
+    {n:"はなまるうどん", h:["karume","shikkari"],   b:"手軽にセルフうどん。"},
+    {n:"ゆで太郎",       h:["karume","shikkari"],   b:"立ち食いそばの定番。"},
+    {n:"名代 富士そば",  h:["karume","shikkari"],   b:"都内どこでも見かける駅そば。"},
+    {n:"小諸そば",       h:["karume"],              b:"コスパ抜群の立ち食いそば。"},
+    {n:"箱根そば",       h:["karume","shikkari"],   b:"私鉄駅そばの定番。"},
+    {n:"山田うどん食堂", h:["karume","shikkari"],   b:"かかしが目印のうどん。"},
+    {n:"そじ坊",         h:["shikkari"],            b:"落ち着いて食べる蕎麦。"},
+  ]},
+  fast:{label:"ファストフード・カフェ", em:"🍔", chains:[
+    {n:"マクドナルド",   h:["karume","shikkari"],   b:"言わずと知れた王道。"},
+    {n:"モスバーガー",   h:["shikkari"],            b:"作りたてのご当地バーガー。"},
+    {n:"ケンタッキー",   h:["shikkari"],            b:"無性に食べたくなる鶏。"},
+    {n:"バーガーキング", h:["shikkari","gattsuri"], b:"ワッパーで肉厚。"},
+    {n:"ロッテリア",     h:["shikkari"],            b:"定番のファストフード。"},
+    {n:"フレッシュネスバーガー",h:["shikkari"],     b:"こだわりの手作りバーガー。"},
+    {n:"サブウェイ",     h:["karume"],              b:"野菜たっぷりサンド。"},
+    {n:"スターバックス", h:["karume"],              b:"コーヒーと軽食で一息。"},
+    {n:"コメダ珈琲店",   h:["shikkari"],            b:"ボリュームある喫茶メニュー。"},
+    {n:"ドトール",       h:["karume"],              b:"コーヒーと軽めの一品。"},
+  ]},
+};
+
+const state={genre:null,hunger:null};
+
+/* build genre chips */
+const gbox=document.querySelector('.group[data-group="genre"] .chips');
+Object.entries(GENRES).forEach(([id,g])=>{
+  gbox.appendChild(makeChip('genre',id,`<span class="em">${g.em}</span>${g.label}`,false));
+});
+/* build hunger chips */
+const hbox=document.querySelector('.group[data-group="hunger"] .chips');
+hbox.appendChild(makeChip('hunger',null,'どれでも',true));
+HUNGER.forEach(([v,l])=>hbox.appendChild(makeChip('hunger',v,l,false)));
+
+function makeChip(group,val,html,isAny){
+  const b=document.createElement('button');
+  b.className='chip'+(isAny?' any':''); b.type='button';
+  b.innerHTML=html; b.dataset.group=group; b.dataset.val=val===null?'':val;
+  b.setAttribute('aria-pressed',isAny?'true':'false');
+  b.addEventListener('click',()=>{
+    state[group]=val;
+    document.querySelectorAll('.chip[data-group="'+group+'"]').forEach(c=>c.setAttribute('aria-pressed','false'));
+    b.setAttribute('aria-pressed','true');
+  });
+  return b;
+}
+
+/* --- area-based google maps url --- */
+const areaInput=document.getElementById('area');
+
+function mapUrl(name){
+  const area=areaInput.value.trim();
+  const q=encodeURIComponent(area ? `${name} ${area}` : name);
+  return `https://www.google.com/maps/search/?api=1&query=${q}`;
+}
+
+/* keep already-shown links in sync when the area is edited */
+function refreshMapLinks(){
+  document.querySelectorAll('a[data-name]').forEach(a=>{
+    a.href=mapUrl(a.getAttribute('data-name'));
+  });
+}
+areaInput.addEventListener('input',refreshMapLinks);
+
+function hungerLabel(v){const f=HUNGER.find(h=>h[0]===v);return f?f[1]:null;}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+const tray=document.getElementById('tray');
+
+function render(){
+  if(!state.genre){
+    tray.innerHTML='<div class="warn">まずは <b>ジャンル</b> を選んでください。</div>';
+    return;
+  }
+  const g=GENRES[state.genre];
+  let list=g.chains.slice();
+  let softened=false;
+  if(state.hunger){
+    const filtered=list.filter(c=>c.h.includes(state.hunger));
+    if(filtered.length){ list=filtered; } else { softened=true; }
+  }
+  list=shuffle(list.slice());
+  const pick=list[0];
+  const others=list.slice(1);
+
+  const tags=[`${g.em} ${g.label}`, state.hunger?hungerLabel(state.hunger):'空き具合おまかせ']
+             .map(t=>`<span>${t}</span>`).join('');
+  const soften = softened ? '<div class="cond"><span>※この空き具合の候補が少なめ→ジャンル全体から</span></div>' : '';
+  const altHtml = others.length ? `
+      <div class="alt">
+        <div class="t">OTHER CANDIDATES</div>
+        <ul>${others.map(c=>`
+          <li>
+            <span class="info"><b>${c.n}</b><em>${c.b}</em></span>
+            <a class="mini" data-name="${c.n}" href="${mapUrl(c.n)}" target="_blank" rel="noopener">地図</a>
+          </li>`).join('')}</ul>
+      </div>` : `<div class="alt"><div class="t">この条件はこの一択。</div></div>`;
+
+  tray.innerHTML=`
+    <div class="ticket show" role="status">
+      <div class="head"><span class="k">MEAL TICKET</span><span class="n">今日はこの店</span></div>
+      <div class="body">
+        <div class="emoji">${g.em}</div>
+        <div><div class="name">${pick.n}</div><div class="blurb">${pick.b}</div></div>
+      </div>
+      <div class="cond">${tags}</div>
+      ${soften}
+      <a class="mapbtn" data-name="${pick.n}" href="${mapUrl(pick.n)}" target="_blank" rel="noopener">🗺️ 「${pick.n}」を地図で探す</a>
+      ${altHtml}
+      <div class="stamp">当り</div>
+      <div class="btns">
+        <button class="again" id="again">別の店にする</button>
+        <button class="edit" id="edit">条件を変える</button>
+      </div>
+    </div>`;
+  document.getElementById('again').addEventListener('click',render);
+  document.getElementById('edit').addEventListener('click',()=>document.getElementById('panel').scrollIntoView({behavior:'smooth',block:'start'}));
+}
+
+document.getElementById('go').addEventListener('click',render);
+</script>
+</body>
+</html>
